@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import fs from'node:fs';import * as parser from'@babel/parser';import traversePkg from'@babel/traverse';
+const traverse=traversePkg.default||traversePkg;
+const b=new URL('../src/',import.meta.url),messages=JSON.parse(fs.readFileSync(new URL('messages.json',b))),keys=JSON.parse(fs.readFileSync(new URL('i18n-keys.json',b)));
+for(const k of keys)assert.ok(Object.hasOwn(messages,k),'Missing English translation: '+k);
+assert.ok(messages.defaultBody.includes('{{link}}'));assert.ok(messages.defaultBody.includes('\n'));
+const source=fs.readFileSync(new URL('main.jsx',b),'utf8'),ast=parser.parse(source,{sourceType:'module',plugins:['jsx']});let raw=[];
+traverse(ast,{JSXText(p){if(/[\u3400-\u9fff]/.test(p.node.value))raw.push(p.node.value)},CallExpression(p){if(p.node.callee.name==='t'&&p.node.arguments[0]?.type==='StringLiteral'){const k=p.node.arguments[0].value;if(/[\u3400-\u9fff]/.test(k))assert.ok(Object.hasOwn(messages,k),'Missing static translation '+k)}}});
+assert.deepEqual(raw,[]);assert.ok(source.includes('LanguageProvider'));assert.ok(source.includes('LanguageSwitch'));assert.ok(source.includes("body: JSON.stringify"));assert.ok(source.includes('email: emailChoice'));
+const i18n=fs.readFileSync(new URL('i18n.jsx',b),'utf8');assert.ok(i18n.includes("localStorage.setItem('beacon_language',language)"));assert.ok(i18n.includes("document.documentElement.lang"));
+console.log('PASS: all '+keys.length+' extracted keys translated; no unlocalized JSX text; persisted language; original campaign payload fields preserved.');

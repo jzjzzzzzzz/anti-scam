@@ -1,0 +1,23 @@
+# Private operational history and credentials must never be published.
+/local-private/
+.env
+.env.*
+!.env.example
+.aws/
+*.pem
+*.key
+*.secret
+*.sqlite*
+*.db
+*.eml
+*.log
+*.pdf
+*.zip
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+dist/
+/build/
+/config.local.json
